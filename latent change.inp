@@ -1,0 +1,247 @@
+DATA:
+          !PROVIDE NAME OF DATAFILE
+          FILE IS longitudinal mediation.dat ;
+
+VARIABLE:
+          !PROVIDE VARIABLE NAMES
+          Names are y0 y1 y2 y3 m0 m1 m2 m3 r1 r2 r3 r4 ;
+          !PROVIDE NAMES OF VARIABLES TO BE USED IN MODEL
+          !NOTE ONE TREATMENT DUMMY VARIABLE LEFT OUT TO BE REFERENCE CATEGORY
+          USEVARIABLES ARE y0 y1 y2 y3 m0 m1 m2 m3 r1 r2 r3 ;
+          !MISSING DATA ARE CODED AS 99 IN THE DATASET
+          Missing are all (99);
+
+          !REQUEST BOOTSTRAP ANALYSIS TO GET CONFIDENCE INTERVALS FOR INDIRECT EFFECTS
+ANALYSIS: BOOTSTRAP = 1000 ;
+
+  
+MODEL:
+           !MEASUREMENT MODEL FOR MEDIATOR
+           !LATENT CHANGE MODEL SETTING ALL LOADINGS TO 1
+           !LATENT VARIABLE IS CHANGE BETWEEN CURRENT AND PREVIOUS TIME POINT
+                      fm0 by m0@1 m1@1 m2@1 m3@1  ;
+                      fm1 by m1@1 m2@1 m3@1 ;
+                      fm2 by m2@1 m3@1 ;
+                      fm3 by m3@1 ;
+                    
+           !(1) CONSTRAINS RESIDUAL VARIANCES TO BE EQUAL ACROSS 
+           !MEDIATOR MEASURES   
+                      m0 m1 m2 m3 (1);
+
+           !MEASUREMENT MODEL FOR OUTCOME
+           !LATENT CHANGE MODEL SETTING ALL LOADINGS TO 1
+           !LATENT VARIABLE IS CHANGE BETWEEN CURRENT AND PREVIOUS TIME POINT
+                      fy0 by y0@1 y1@1 y2@1 y3@1 ;
+                      fy1 by y1@1 y2@1 y3@1 ;
+                      fy2 by y2@1 y3@1 ;
+                      fy3 by y3@1 ;                   
+                                      
+           !(2) CONSTRAINS RESIDUAL VARIANCES TO BE EQUAL ACROSS 
+           !MEDIATOR MEASURES          
+                      y0 y1 y2 y3 (2);
+
+           !A PATH EFFECTS OF TREATMENT GROUP ON MEDIATOR AT FIRST TIME POINT
+                      fm1 on r1*0 (a11) ;
+                      fm1 on r2*0 (a21) ;
+                      fm1 on r3*0 (a31) ;
+
+           !A PATH EFFECTS OF TREATMENT GROUP ON MEDIATOR AT SECOND TIME POINT
+                      fm2 on r1*0 (a12) ;
+                      fm2 on r2*0 (a22) ;
+                      fm2 on r3*0 (a32) ;
+
+           !NO EFFECT OF TREATMENT GROUP ON MEDIATOR AT THIRD TIME POINT
+                      fm3 on r1@0 r2@0 r3@0 ;
+
+           !C' PATH EFFECTS OF TREATMENT GROUP ON OUTCOME AT FIRST TIME POINT
+                      fy1 on r1*0 (c11) ;
+                      fy1 on r2*0 (c21) ;
+                      fy1 on r3*0 (c31) ;
+
+           !C' PATH EFFECTS OF TREATMENT GROUP ON OUTCOME AT SECOND TIME POINT
+                      fy2 on r1*0 (c12) ;
+                      fy2 on r2*0 (c22) ;
+                      fy2 on r3*0 (c32) ;
+
+           !NO EFFECT OF TREATMENT GROUP ON OUTCOME AT THIRD TIME POINT
+                      fy3 on r1@0 r2@0 r3@0 ;
+
+           !CONTEMPORANEOUS B PATH EFFECTS
+                      fy1 on fm1*0 (b) ;
+                      fy2 on fm2*0 (b) ;
+                      fy3 on fm3*0 (b) ;
+
+           !ALLOW FOR COVARIANCE BETWEEN BASELINE MEDIATOR 
+           !AND OUTCOME TRUE VARIATION ON CHANGE SCORES
+           !CONSTRAIN COVARIANCE BETWEEN BASELINE MEDIATOR 
+           !AND OUTCOME TRUE SCORES = 0 AT OTHER TIME POINTS
+                      fm0 with fy0*0 ;
+                      fm1 with fy1@0 ;
+                      fm2 with fy2@0 ;
+                      fm3 with fy3@0 ;
+                      fy1 with fy2@0 ;
+                      fy2 with fy3@0 ;
+                      fy1 with fy3@0 ;
+
+           !ALLOW FOR RESIDUAL COVARIANCE BETWEEN MEDIATOR AND OUTCOME AT EACH 
+           !TIME POINT AND CONSTRAIN TO BE EQUAL (4 AT END OF EACH LINE)
+                      m0 with y0 (4) ;
+                      y1 with m1 (4) ;
+                      y2 with m2 (4) ;
+                      y3 with m3 (4) ;  
+
+           !USE OF THE BUILT IN MPLUS COMMAND TO REQUEST INDIRECT EFFECTS 
+           !FOR EACH POST-RANDOMISATION TIME POINT 
+MODEL INDIRECT:      y1 ind r1 ;
+                     y2 ind r1 ;
+                     y3 ind r1 ;
+                     y1 ind r2 ;
+                     y2 ind r2 ;
+                     y3 ind r2 ;
+                     y1 ind r3 ;
+                     y2 ind r3 ;
+                     y3 ind r3 ;
+
+            !BUILT IN COMMAND DOES NOT PROVIDE ALL EFFECTS OF INTEREST
+            !BELOW SHOWS USE OF MODEL CONSTRAINT COMMAND TO GET ALL EFFECTS
+
+MODEL CONSTRAINT:
+             !EFFECTS FOR R1
+             NEW(r1i11 r1i1t r1d11 r1d1t r11t);
+             NEW(r1i21 r1i22 r1i2t r1d21 r1d22 r1d2t r12t);
+             NEW(r1i31 r1i32 r1i3t r1d31 r1d32 r1d3t r13t) ;
+
+             !FIRST INDIRECT EFFECT TIME POINT 1
+                    r1i11 = a11*b*1 ;
+             !TOTAL INDIRECT EFFECT TIME POINT 1
+                    r1i1t = r1i11 ;
+             !FIRST DIRECT EFFECT TIME POINT 1
+                    r1d11 = c11*1 ;
+             !TOTAL DIRECT EFFECT TIME POINT 1
+                    r1d1t = r1d11 ;
+             !TOTAL EFFECT TIME POINT 1 = TOTAL INDIRECT + TOTAL DIRECT
+                    r11t = r1i1t + r1d1t ;
+
+             !FIRST INDIRECT EFFECT TIME POINT 2
+                    r1i21 = a11*b*1 ;
+             !SECOND INDIRECT EFFECT TIME POINT 2
+                    r1i22 = a12*b*1 ;
+             !TOTAL INDIRECT EFFECT TIME POINT 2
+                    r1i2t = r1i21 + r1i22 ;
+             !FIRST DIRECT EFFECT TIME POINT 2
+                    r1d21 = c11*1 ;
+             !SECOND DIRECT EFFECT TIME POINT 2
+                    r1d22 = c12*1 ;
+             !TOTAL DIRECT EFFECT TIME POINT 2
+                    r1d2t = r1d21 + r1d22 ;
+             !TOTAL EFFECT TIME POINT 2 = TOTAL INDIRECT + TOTAL DIRECT
+                    r12t = r1i2t + r1d2t ;   
+
+              !FIRST INDIRECT EFFECT TIME POINT 3
+                    r1i31 = a11*b*1 ;
+              !SECOND INDIRECT EFFECT TIME POINT 3
+                    r1i32 = a12*b*1 ;
+              !TOTAL INDIRECT EFFECT TIME POINT 3
+                    r1i3t = r1i31 + r1i32 ;
+              !FIRST DIRECT EFFECT TIME POINT 3
+                    r1d31 = c11*1 ;
+              !SECOND DIRECT EFFECT TIME POINT 3
+                    r1d32 = c12*1 ;
+              !TOTAL DIRECT EFFECT TIME POINT 3
+                    r1d3t = r1d31 + r1d32 ;
+              !TOTAL EFFECT TIME POINT 3 = TOTAL INDIRECT + TOTAL DIRECT
+                    r13t = r1i3t + r1d3t ;
+
+             !EFFECTS FOR R2
+             NEW(r2i11 r2i1t r2d11 r2d1t r21t);
+             NEW(r2i21 r2i22 r2i2t r2d21 r2d22 r2d2t r22t);
+             NEW(r2i31 r2i32 r2i3t r2d31 r2d32 r2d3t r23t) ;
+
+             !FIRST INDIRECT EFFECT TIME POINT 1
+                    r2i11 = a21*b*1 ;
+             !TOTAL INDIRECT EFFECT TIME POINT 1
+                    r2i1t = r2i11 ;
+             !FIRST DIRECT EFFECT TIME POINT 1
+                    r2d11 = c21*1 ;
+             !TOTAL DIRECT EFFECT TIME POINT 1
+                    r2d1t = r2d11 ;
+             !TOTAL EFFECT TIME POINT 1 = TOTAL INDIRECT + TOTAL DIRECT
+                    r21t = r2i1t + r2d1t ;
+
+             !FIRST INDIRECT EFFECT TIME POINT 2
+                    r2i21 = a21*b*1 ;
+             !SECOND INDIRECT EFFECT TIME POINT 2
+                    r2i22 = a22*b*1 ;
+             !TOTAL INDIRECT EFFECT TIME POINT 2
+                    r2i2t = r2i21 + r2i22 ;
+             !FIRST DIRECT EFFECT TIME POINT 2
+                    r2d21 = c21*1 ;
+             !SECOND DIRECT EFFECT TIME POINT 2
+                    r2d22 = c22*1 ;
+             !TOTAL DIRECT EFFECT TIME POINT 2
+                    r2d2t = r2d21 + r2d22 ;
+             !TOTAL EFFECT TIME POINT 2 = TOTAL INDIRECT + TOTAL DIRECT
+                    r22t = r2i2t + r2d2t ;   
+
+              !FIRST INDIRECT EFFECT TIME POINT 3
+                    r2i31 = a21*b*1 ;
+              !SECOND INDIRECT EFFECT TIME POINT 3
+                    r2i32 = a22*b*1 ;
+              !TOTAL INDIRECT EFFECT TIME POINT 3
+                    r2i3t = r2i31 + r2i32 ;
+              !FIRST DIRECT EFFECT TIME POINT 3
+                    r2d31 = c21*1 ;
+              !SECOND DIRECT EFFECT TIME POINT 3
+                    r2d32 = c22*1 ;
+              !TOTAL DIRECT EFFECT TIME POINT 3
+                    r2d3t = r2d31 + r2d32 ;
+              !TOTAL EFFECT TIME POINT 3 = TOTAL INDIRECT + TOTAL DIRECT
+                    r23t = r2i3t + r2d3t ;
+
+             !EFFECTS FOR R3
+             NEW(r3i11 r3i1t r3d11 r3d1t r31t);
+             NEW(r3i21 r3i22 r3i2t r3d21 r3d22 r3d2t r32t);
+             NEW(r3i31 r3i32 r3i3t r3d31 r3d32 r3d3t r33t) ;
+
+             !FIRST INDIRECT EFFECT TIME POINT 1
+                    r3i11 = a31*b*1 ;
+             !TOTAL INDIRECT EFFECT TIME POINT 1
+                    r3i1t = r3i11 ;
+             !FIRST DIRECT EFFECT TIME POINT 1
+                    r3d11 = c31*1 ;
+             !TOTAL DIRECT EFFECT TIME POINT 1
+                    r3d1t = r3d11 ;
+             !TOTAL EFFECT TIME POINT 1 = TOTAL INDIRECT + TOTAL DIRECT
+                    r31t = r3i1t + r3d1t ;
+
+             !FIRST INDIRECT EFFECT TIME POINT 2
+                    r3i21 = a31*b*1 ;
+             !SECOND INDIRECT EFFECT TIME POINT 2
+                    r3i22 = a32*b*1 ;
+             !TOTAL INDIRECT EFFECT TIME POINT 2
+                    r3i2t = r3i21 + r3i22 ;
+             !FIRST DIRECT EFFECT TIME POINT 2
+                    r3d21 = c31*1 ;
+             !SECOND DIRECT EFFECT TIME POINT 2
+                    r3d22 = c32*1 ;
+             !TOTAL DIRECT EFFECT TIME POINT 2
+                    r3d2t = r3d21 + r3d22 ;
+             !TOTAL EFFECT TIME POINT 2 = TOTAL INDIRECT + TOTAL DIRECT
+                    r32t = r3i2t + r3d2t ;   
+
+              !FIRST INDIRECT EFFECT TIME POINT 3
+                    r3i31 = a31*b*1 ;
+              !SECOND INDIRECT EFFECT TIME POINT 3
+                    r3i32 = a32*b*1 ;
+              !TOTAL INDIRECT EFFECT TIME POINT 3
+                    r3i3t = r3i31 + r3i32 ;
+              !FIRST DIRECT EFFECT TIME POINT 3
+                    r3d31 = c31*1 ;
+              !SECOND DIRECT EFFECT TIME POINT 3
+                    r3d32 = c32*1 ;
+              !TOTAL DIRECT EFFECT TIME POINT 3
+                    r3d3t = r3d31 + r3d32 ;
+              !TOTAL EFFECT TIME POINT 3 = TOTAL INDIRECT + TOTAL DIRECT
+                    r33t = r3i3t + r3d3t ;
+
+OUTPUT:             CINTERVAL(BOOTSTRAP) ;

@@ -1,0 +1,148 @@
+DATA:
+          !PROVIDE NAME OF DATAFILE
+          FILE IS longitudinal mediation.dat ;
+
+VARIABLE:
+          !PROVIDE VARIABLE NAMES
+          Names are y0 y1 y2 y3 m0 m1 m2 m3 r1 r2 r3 r4 ;
+          !PROVIDE NAMES OF VARIABLES TO BE USED IN MODEL
+          !NOTE ONE TREATMENT DUMMY VARIABLE LEFT OUT TO BE REFERENCE CATEGORY
+          USEVARIABLES ARE y0 y1 y2 y3 m0 m1 m2 m3 r1 r2 r3 ;
+          !MISSING DATA ARE CODED AS 99 IN THE DATASET
+          Missing are all (99);
+
+          !REQUEST BOOTSTRAP ANALYSIS TO GET CONFIDENCE INTERVALS FOR INDIRECT EFFECTS
+ANALYSIS: BOOTSTRAP = 1000 ;
+
+
+MODEL:
+                     !INTERCEPT FOR MEDIATOR PROCESS
+                     !ALL LOADINGS 1 TO INDICATE AN INTERCEPT
+           	         IM BY m0@1 m1@1 m2@1 m3@1 ;
+
+                     !SLOPE FOR MEDIATOR PROCESS
+                     !SLOPE SET AS SQUARE ROOT OF TIME POINT
+                     !WITH FINAL FACTOR LOADING FREE
+           	         SM BY m1@1 m2@1.4142 m3 ;
+    
+                     !INTERCEPT FOR OUTCOME PROCESS
+                     !ALL LOADINGS 1 TO INDICATE AN INTERCEPT
+                     IY BY y0@1 y1@1 y2@1 y3@1 ;
+
+                     !SLOPE FOR OUTCOME PROCESS
+                     !SLOPE SET AS SQUARE ROOT OF TIME POINT
+                     !WITH FINAL FACTOR LOADING FREE
+                     !CAPTURED AS y3 TO USE IN EFFECT CALCULATIONS
+                     SY BY y1@1 y2@1.4142 y3 (y) ;
+
+                     !ALLOW FOR CORRELATIONS BETWEEN INTERCEPT AND SLOPE VARIABLES
+                     IM with SM;
+                     IY with SY;
+                     IM with SY;
+                     IY with SM;
+                     IM with IY;
+
+                    !A PATH EFFECTS OF TREATMENT GROUP ON SLOPE OF THE MEDIATOR
+                     SM on r1 (a1) ;
+                     SM on r2 (a2) ;
+                     SM on r3 (a3) ;
+
+                    !C' PATH EFFECTS OF TREATMENT GROUP ON SLOPE OF THE OUTCOME
+                     SY on r1 (c1) ;
+                     SY on r2 (c2) ;
+                     SY on r3 (c3) ;
+
+                    !B PATH FROM SLOPE OF MEDIATOR TO SLOPE OF OUTCOME
+                     SY ON SM (b) ;
+
+                    !ALLOW FOR RESIDUAL COVARIANCE BETWEEN MEDIATOR AND OUTCOME AT EACH 
+                    !TIME POINT AND CONSTRAIN TO BE EQUAL (4 AT END OF EACH LINE)
+                     m0 WITH y0 (3) ;
+                     m1 WITH y1 (3) ;
+                     m2 WITH y2 (3) ;
+                     m3 WITH y3 (3) ;
+
+                    !USE OF THE BUILT IN MPLUS COMMAND TO REQUEST INDIRECT EFFECTS 
+                    !FOR EACH POST-RANDOMISATION TIME POINT
+MODEL INDIRECT:      y1 ind r1 ;
+                     y2 ind r1 ;
+                     y3 ind r1 ;
+                     y1 ind r2 ;
+                     y2 ind r2 ;
+                     y3 ind r2 ;
+                     y1 ind r3 ;
+                     y2 ind r3 ;
+                     y3 ind r3 ;
+
+MODEL CONSTRAINT:
+                     NEW (r1i1 r1d1 r11t r1i2 r1d2 r12t r1i3 r1d3 r13t);
+                     NEW (r2i1 r2d1 r21t r2i2 r2d2 r22t r2i3 r2d3 r23t);
+                     NEW (r3i1 r3d1 r31t r3i2 r3d2 r32t r3i3 r3d3 r33t);
+
+                     !EFFECTS FOR R1    
+                     !INDIRECT EFFECT TIME POINT 1
+                     r1i1 = a1*b*1 ;
+                     !DIRECT EFFECT TIME POINT 1
+                     r1d1 = c1*1 ;
+                     !TOTAL EFFECT TIME POINT 1 = INDIRECT + DIRECT
+                     r11t = r1i1 + r1d1;
+
+                     !INDIRECT EFFECT TIME POINT 2
+                     r1i2 = a1*b*1.4142 ;
+                     !DIRECT EFFECT TIME POINT 2
+                     r1d2 = c1*1.4142 ;
+                     !TOTAL EFFECT TIME POINT 2 = INDIRECT + DIRECT
+                     r12t = r1i2 + r1d2;
+
+                     !INDIRECT EFFECT TIME POINT 3
+                     r1i3 = a1*b*y ;
+                     !DIRECT EFFECT TIME POINT 3
+                     r1d3 = c1*y ;
+                     !TOTAL EFFECT TIME POINT 3 = INDIRECT + DIRECT
+                     r13t = r1i3 + r1d3 ;
+
+                     !EFFECTS FOR R2
+                     !INDIRECT EFFECT TIME POINT 1
+                     r2i1 = a2*b*1 ;
+                     !DIRECT EFFECT TIME POINT 1
+                     r2d1 = c2*1 ;
+                     !TOTAL EFFECT TIME POINT 1 = INDIRECT + DIRECT
+                     r21t = r2i1 + r2d1;
+
+                     !INDIRECT EFFECT TIME POINT 2
+                     r2i2 = a2*b*1.4142 ;
+                     !DIRECT EFFECT TIME POINT 2
+                     r2d2 = c2*1.4142 ;
+                     !TOTAL EFFECT TIME POINT 2 = INDIRECT + DIRECT
+                     r22t = r2i2 + r2d2;
+
+                     !INDIRECT EFFECT TIME POINT 3
+                     r2i3 = a2*b*y ;
+                     !DIRECT EFFECT TIME POINT 3
+                     r2d3 = c2*y ;
+                     !TOTAL EFFECT TIME POINT 3 = INDIRECT + DIRECT
+                     r23t = r2i3 + r2d3 ;
+
+                     !EFFECTS FOR R3
+                     !INDIRECT EFFECT TIME POINT 1
+                     r3i1 = a3*b*1 ;
+                     !DIRECT EFFECT TIME POINT 1
+                     r3d1 = c3*1 ;
+                     !TOTAL EFFECT TIME POINT 1 = INDIRECT + DIRECT
+                     r31t = r3i1 + r3d1;
+
+                     !INDIRECT EFFECT TIME POINT 2
+                     r3i2 = a3*b*1.4142 ;
+                     !DIRECT EFFECT TIME POINT 2
+                     r3d2 = c3*1.4142 ;
+                     !TOTAL EFFECT TIME POINT 2 = INDIRECT + DIRECT
+                     r32t = r3i2 + r3d2;
+
+                     !INDIRECT EFFECT TIME POINT 3
+                     r3i3 = a3*b*y ;
+                     !DIRECT EFFECT TIME POINT 3
+                     r3d3 = c3*y ;
+                     !TOTAL EFFECT TIME POINT 3 = INDIRECT + DIRECT
+                     r33t = r3i3 + r3d3 ;
+
+OUTPUT:              CINTERVAL(BOOTSTRAP) ;

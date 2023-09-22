@@ -1,0 +1,873 @@
+Mplus VERSION 7.3
+MUTHEN & MUTHEN
+03/06/2017   9:31 PM
+
+INPUT INSTRUCTIONS
+
+  DATA:
+            !PROVIDE NAME OF DATAFILE
+            FILE IS longitudinal mediation.dat ;
+
+  VARIABLE:
+            !PROVIDE VARIABLE NAMES
+            Names are y0 y1 y2 y3 m0 m1 m2 m3 r1 r2 r3 r4 ;
+            !PROVIDE NAMES OF VARIABLES TO BE USED IN MODEL
+            !NOTE ONE TREATMENT DUMMY VARIABLE LEFT OUT TO BE REFERENCE CATEGORY
+            USEVARIABLES ARE y0 y1 y2 y3 m0 m1 m2 m3 r1 r2 r3 ;
+            !MISSING DATA ARE CODED AS 99 IN THE DATASET
+            Missing are all (99);
+
+            !REQUEST BOOTSTRAP ANALYSIS TO GET CONFIDENCE INTERVALS FOR INDIRECT EFFECTS
+  ANALYSIS: BOOTSTRAP = 1000 ;
+
+
+  MODEL:
+                       !INTERCEPT FOR MEDIATOR PROCESS
+                       !ALL LOADINGS 1 TO INDICATE AN INTERCEPT
+             	         IM BY m0@1 m1@1 m2@1 m3@1 ;
+
+                       !SLOPE FOR MEDIATOR PROCESS
+                       !SLOPE SET AS SQUARE ROOT OF TIME POINT
+                       !WITH FINAL FACTOR LOADING FREE
+             	         SM BY m1@1 m2@1.4142 m3 ;
+
+                       !INTERCEPT FOR OUTCOME PROCESS
+                       !ALL LOADINGS 1 TO INDICATE AN INTERCEPT
+                       IY BY y0@1 y1@1 y2@1 y3@1 ;
+
+                       !SLOPE FOR OUTCOME PROCESS
+                       !SLOPE SET AS SQUARE ROOT OF TIME POINT
+                       !WITH FINAL FACTOR LOADING FREE
+                       !CAPTURED AS y3 TO USE IN EFFECT CALCULATIONS
+                       SY BY y1@1 y2@1.4142 y3 (y) ;
+
+                       !ALLOW FOR CORRELATIONS BETWEEN INTERCEPT AND SLOPE VARIABLES
+                       IM with SM;
+                       IY with SY;
+                       IM with SY;
+                       IY with SM;
+                       IM with IY;
+
+                      !A PATH EFFECTS OF TREATMENT GROUP ON SLOPE OF THE MEDIATOR
+                       SM on r1 (a1) ;
+                       SM on r2 (a2) ;
+                       SM on r3 (a3) ;
+
+                      !C' PATH EFFECTS OF TREATMENT GROUP ON SLOPE OF THE OUTCOME
+                       SY on r1 (c1) ;
+                       SY on r2 (c2) ;
+                       SY on r3 (c3) ;
+
+                      !B PATH FROM SLOPE OF MEDIATOR TO SLOPE OF OUTCOME
+                       SY ON SM (b) ;
+
+                      !ALLOW FOR RESIDUAL COVARIANCE BETWEEN MEDIATOR AND OUTCOME AT EACH
+                      !TIME POINT AND CONSTRAIN TO BE EQUAL (4 AT END OF EACH LINE)
+                       m0 WITH y0 (3) ;
+                       m1 WITH y1 (3) ;
+                       m2 WITH y2 (3) ;
+                       m3 WITH y3 (3) ;
+
+                      !USE OF THE BUILT IN MPLUS COMMAND TO REQUEST INDIRECT EFFECTS
+                      !FOR EACH POST-RANDOMISATION TIME POINT
+  MODEL INDIRECT:      y1 ind r1 ;
+                       y2 ind r1 ;
+                       y3 ind r1 ;
+                       y1 ind r2 ;
+                       y2 ind r2 ;
+                       y3 ind r2 ;
+                       y1 ind r3 ;
+                       y2 ind r3 ;
+                       y3 ind r3 ;
+
+  MODEL CONSTRAINT:
+                       NEW (r1i1 r1d1 r11t r1i2 r1d2 r12t r1i3 r1d3 r13t);
+                       NEW (r2i1 r2d1 r21t r2i2 r2d2 r22t r2i3 r2d3 r23t);
+                       NEW (r3i1 r3d1 r31t r3i2 r3d2 r32t r3i3 r3d3 r33t);
+
+                       !EFFECTS FOR R1
+                       !INDIRECT EFFECT TIME POINT 1
+                       r1i1 = a1*b*1 ;
+                       !DIRECT EFFECT TIME POINT 1
+                       r1d1 = c1*1 ;
+                       !TOTAL EFFECT TIME POINT 1 = INDIRECT + DIRECT
+                       r11t = r1i1 + r1d1;
+
+                       !INDIRECT EFFECT TIME POINT 2
+                       r1i2 = a1*b*1.4142 ;
+                       !DIRECT EFFECT TIME POINT 2
+                       r1d2 = c1*1.4142 ;
+                       !TOTAL EFFECT TIME POINT 2 = INDIRECT + DIRECT
+                       r12t = r1i2 + r1d2;
+
+                       !INDIRECT EFFECT TIME POINT 3
+                       r1i3 = a1*b*y ;
+                       !DIRECT EFFECT TIME POINT 3
+                       r1d3 = c1*y ;
+                       !TOTAL EFFECT TIME POINT 3 = INDIRECT + DIRECT
+                       r13t = r1i3 + r1d3 ;
+
+                       !EFFECTS FOR R2
+                       !INDIRECT EFFECT TIME POINT 1
+                       r2i1 = a2*b*1 ;
+                       !DIRECT EFFECT TIME POINT 1
+                       r2d1 = c2*1 ;
+                       !TOTAL EFFECT TIME POINT 1 = INDIRECT + DIRECT
+                       r21t = r2i1 + r2d1;
+
+                       !INDIRECT EFFECT TIME POINT 2
+                       r2i2 = a2*b*1.4142 ;
+                       !DIRECT EFFECT TIME POINT 2
+                       r2d2 = c2*1.4142 ;
+                       !TOTAL EFFECT TIME POINT 2 = INDIRECT + DIRECT
+                       r22t = r2i2 + r2d2;
+
+                       !INDIRECT EFFECT TIME POINT 3
+                       r2i3 = a2*b*y ;
+                       !DIRECT EFFECT TIME POINT 3
+                       r2d3 = c2*y ;
+                       !TOTAL EFFECT TIME POINT 3 = INDIRECT + DIRECT
+                       r23t = r2i3 + r2d3 ;
+
+                       !EFFECTS FOR R3
+                       !INDIRECT EFFECT TIME POINT 1
+                       r3i1 = a3*b*1 ;
+                       !DIRECT EFFECT TIME POINT 1
+                       r3d1 = c3*1 ;
+                       !TOTAL EFFECT TIME POINT 1 = INDIRECT + DIRECT
+                       r31t = r3i1 + r3d1;
+
+                       !INDIRECT EFFECT TIME POINT 2
+                       r3i2 = a3*b*1.4142 ;
+                       !DIRECT EFFECT TIME POINT 2
+                       r3d2 = c3*1.4142 ;
+                       !TOTAL EFFECT TIME POINT 2 = INDIRECT + DIRECT
+                       r32t = r3i2 + r3d2;
+
+                       !INDIRECT EFFECT TIME POINT 3
+                       r3i3 = a3*b*y ;
+                       !DIRECT EFFECT TIME POINT 3
+                       r3d3 = c3*y ;
+                       !TOTAL EFFECT TIME POINT 3 = INDIRECT + DIRECT
+                       r33t = r3i3 + r3d3 ;
+
+  OUTPUT:              CINTERVAL(BOOTSTRAP) ;
+
+
+
+INPUT READING TERMINATED NORMALLY
+
+
+
+
+SUMMARY OF ANALYSIS
+
+Number of groups                                                 1
+Number of observations                                         640
+
+Number of dependent variables                                    8
+Number of independent variables                                  3
+Number of continuous latent variables                            4
+
+Observed dependent variables
+
+  Continuous
+   Y0          Y1          Y2          Y3          M0          M1
+   M2          M3
+
+Observed independent variables
+   R1          R2          R3
+
+Continuous latent variables
+   IM          SM          IY          SY
+
+
+Estimator                                                       ML
+Information matrix                                        OBSERVED
+Maximum number of iterations                                  1000
+Convergence criterion                                    0.500D-04
+Maximum number of steepest descent iterations                   20
+Maximum number of iterations for H1                           2000
+Convergence criterion for H1                             0.100D-03
+Number of bootstrap draws
+    Requested                                                 1000
+    Completed                                                 1000
+
+Input data file(s)
+  longitudinal mediation.dat
+
+Input data format  FREE
+
+
+SUMMARY OF DATA
+
+     Number of missing data patterns             1
+
+
+COVARIANCE COVERAGE OF DATA
+
+Minimum covariance coverage value   0.100
+
+
+     PROPORTION OF DATA PRESENT
+
+
+           Covariance Coverage
+              Y0            Y1            Y2            Y3            M0
+              ________      ________      ________      ________      ________
+ Y0             1.000
+ Y1             1.000         1.000
+ Y2             1.000         1.000         1.000
+ Y3             1.000         1.000         1.000         1.000
+ M0             1.000         1.000         1.000         1.000         1.000
+ M1             1.000         1.000         1.000         1.000         1.000
+ M2             1.000         1.000         1.000         1.000         1.000
+ M3             1.000         1.000         1.000         1.000         1.000
+ R1             1.000         1.000         1.000         1.000         1.000
+ R2             1.000         1.000         1.000         1.000         1.000
+ R3             1.000         1.000         1.000         1.000         1.000
+
+
+           Covariance Coverage
+              M1            M2            M3            R1            R2
+              ________      ________      ________      ________      ________
+ M1             1.000
+ M2             1.000         1.000
+ M3             1.000         1.000         1.000
+ R1             1.000         1.000         1.000         1.000
+ R2             1.000         1.000         1.000         1.000         1.000
+ R3             1.000         1.000         1.000         1.000         1.000
+
+
+           Covariance Coverage
+              R3
+              ________
+ R3             1.000
+
+
+
+THE MODEL ESTIMATION TERMINATED NORMALLY
+
+
+
+MODEL FIT INFORMATION
+
+Number of Free Parameters                       35
+
+Loglikelihood
+
+          H0 Value                       -6700.530
+          H1 Value                       -6668.032
+
+Information Criteria
+
+          Akaike (AIC)                   13471.059
+          Bayesian (BIC)                 13627.211
+          Sample-Size Adjusted BIC       13516.088
+            (n* = (n + 2) / 24)
+
+Chi-Square Test of Model Fit
+
+          Value                             64.995
+          Degrees of Freedom                    33
+          P-Value                           0.0007
+
+RMSEA (Root Mean Square Error Of Approximation)
+
+          Estimate                           0.039
+          90 Percent C.I.                    0.025  0.053
+          Probability RMSEA <= .05           0.902
+
+CFI/TLI
+
+          CFI                                0.990
+          TLI                                0.985
+
+Chi-Square Test of Model Fit for the Baseline Model
+
+          Value                           3311.177
+          Degrees of Freedom                    52
+          P-Value                           0.0000
+
+SRMR (Standardized Root Mean Square Residual)
+
+          Value                              0.027
+
+
+
+MODEL RESULTS
+
+                                                    Two-Tailed
+                    Estimate       S.E.  Est./S.E.    P-Value
+
+ IM       BY
+    M0                 1.000      0.000    999.000    999.000
+    M1                 1.000      0.000    999.000    999.000
+    M2                 1.000      0.000    999.000    999.000
+    M3                 1.000      0.000    999.000    999.000
+
+ SM       BY
+    M1                 1.000      0.000    999.000    999.000
+    M2                 1.414      0.000    999.000    999.000
+    M3                 1.205      0.068     17.700      0.000
+
+ IY       BY
+    Y0                 1.000      0.000    999.000    999.000
+    Y1                 1.000      0.000    999.000    999.000
+    Y2                 1.000      0.000    999.000    999.000
+    Y3                 1.000      0.000    999.000    999.000
+
+ SY       BY
+    Y1                 1.000      0.000    999.000    999.000
+    Y2                 1.414      0.000    999.000    999.000
+    Y3                 1.387      0.069     20.187      0.000
+
+ SY       ON
+    SM                -0.362      0.163     -2.223      0.026
+
+ SM       ON
+    R1                -0.625      0.070     -8.984      0.000
+    R2                 0.070      0.071      0.992      0.321
+    R3                -0.701      0.072     -9.741      0.000
+
+ SY       ON
+    R1                 0.329      0.137      2.409      0.016
+    R2                 0.109      0.090      1.209      0.227
+    R3                 0.256      0.152      1.686      0.092
+
+ IM       WITH
+    SM                -0.114      0.071     -1.595      0.111
+    SY                -0.080      0.037     -2.164      0.030
+    IY                 0.063      0.041      1.529      0.126
+
+ IY       WITH
+    SY                -0.233      0.093     -2.506      0.012
+    SM                -0.030      0.032     -0.940      0.347
+
+ M0       WITH
+    Y0                -0.069      0.012     -5.743      0.000
+
+ M1       WITH
+    Y1                -0.069      0.012     -5.743      0.000
+
+ M2       WITH
+    Y2                -0.069      0.012     -5.743      0.000
+
+ M3       WITH
+    Y3                -0.069      0.012     -5.743      0.000
+
+ Intercepts
+    Y0                -0.040      0.043     -0.947      0.344
+    Y1                 0.231      0.076      3.050      0.002
+    Y2                 0.278      0.099      2.813      0.005
+    Y3                 0.491      0.103      4.787      0.000
+    M0                 0.007      0.040      0.166      0.868
+    M1                -0.210      0.062     -3.391      0.001
+    M2                -0.285      0.076     -3.738      0.000
+    M3                -0.399      0.072     -5.534      0.000
+
+ Variances
+    IM                 0.724      0.099      7.292      0.000
+    IY                 1.084      0.125      8.642      0.000
+
+ Residual Variances
+    Y0                 0.033      0.110      0.295      0.768
+    Y1                 0.505      0.037     13.511      0.000
+    Y2                 0.317      0.040      8.002      0.000
+    Y3                 0.647      0.051     12.612      0.000
+    M0                 0.300      0.088      3.413      0.001
+    M1                 0.421      0.030     14.022      0.000
+    M2                 0.254      0.030      8.359      0.000
+    M3                 0.379      0.030     12.736      0.000
+    SM                 0.254      0.058      4.385      0.000
+    SY                 0.557      0.083      6.749      0.000
+
+New/Additional Parameters
+    R1I1               0.226      0.110      2.066      0.039
+    R1D1               0.329      0.137      2.409      0.016
+    R11T               0.555      0.086      6.425      0.000
+    R1I2               0.320      0.155      2.066      0.039
+    R1D2               0.465      0.193      2.409      0.016
+    R12T               0.785      0.122      6.425      0.000
+    R1I3               0.314      0.153      2.049      0.040
+    R1D3               0.456      0.191      2.390      0.017
+    R13T               0.770      0.123      6.279      0.000
+    R2I1              -0.025      0.031     -0.832      0.406
+    R2D1               0.109      0.090      1.209      0.227
+    R21T               0.084      0.093      0.903      0.366
+    R2I2              -0.036      0.043     -0.832      0.406
+    R2D2               0.155      0.128      1.209      0.227
+    R22T               0.119      0.131      0.903      0.366
+    R2I3              -0.035      0.043     -0.828      0.407
+    R2D3               0.152      0.127      1.190      0.234
+    R23T               0.116      0.130      0.892      0.372
+    R3I1               0.254      0.125      2.026      0.043
+    R3D1               0.256      0.152      1.686      0.092
+    R31T               0.510      0.091      5.587      0.000
+    R3I2               0.359      0.177      2.026      0.043
+    R3D2               0.362      0.215      1.686      0.092
+    R32T               0.721      0.129      5.587      0.000
+    R3I3               0.352      0.176      2.007      0.045
+    R3D3               0.355      0.212      1.672      0.095
+    R33T               0.707      0.132      5.345      0.000
+
+
+TOTAL, TOTAL INDIRECT, SPECIFIC INDIRECT, AND DIRECT EFFECTS
+
+
+                                                    Two-Tailed
+                    Estimate       S.E.  Est./S.E.    P-Value
+
+Effects from R1 to Y1
+
+  Total                0.555      0.086      6.425      0.000
+  Total indirect       0.555      0.086      6.425      0.000
+
+  Specific indirect
+
+    Y1
+    SY
+    R1                 0.329      0.137      2.409      0.016
+
+    Y1
+    SY
+    SM
+    R1                 0.226      0.110      2.066      0.039
+
+
+Effects from R2 to Y1
+
+  Total                0.084      0.093      0.903      0.366
+  Total indirect       0.084      0.093      0.903      0.366
+
+  Specific indirect
+
+    Y1
+    SY
+    R2                 0.109      0.090      1.209      0.227
+
+    Y1
+    SY
+    SM
+    R2                -0.025      0.031     -0.832      0.406
+
+
+Effects from R3 to Y1
+
+  Total                0.510      0.091      5.587      0.000
+  Total indirect       0.510      0.091      5.587      0.000
+
+  Specific indirect
+
+    Y1
+    SY
+    R3                 0.256      0.152      1.686      0.092
+
+    Y1
+    SY
+    SM
+    R3                 0.254      0.125      2.026      0.043
+
+
+Effects from R1 to Y2
+
+  Total                0.785      0.122      6.425      0.000
+  Total indirect       0.785      0.122      6.425      0.000
+
+  Specific indirect
+
+    Y2
+    SY
+    R1                 0.465      0.193      2.409      0.016
+
+    Y2
+    SY
+    SM
+    R1                 0.320      0.155      2.066      0.039
+
+
+Effects from R2 to Y2
+
+  Total                0.119      0.131      0.903      0.366
+  Total indirect       0.119      0.131      0.903      0.366
+
+  Specific indirect
+
+    Y2
+    SY
+    R2                 0.155      0.128      1.209      0.227
+
+    Y2
+    SY
+    SM
+    R2                -0.036      0.043     -0.832      0.406
+
+
+Effects from R3 to Y2
+
+  Total                0.721      0.129      5.587      0.000
+  Total indirect       0.721      0.129      5.587      0.000
+
+  Specific indirect
+
+    Y2
+    SY
+    R3                 0.362      0.215      1.686      0.092
+
+    Y2
+    SY
+    SM
+    R3                 0.359      0.177      2.026      0.043
+
+
+Effects from R1 to Y3
+
+  Total                0.770      0.123      6.279      0.000
+  Total indirect       0.770      0.123      6.279      0.000
+
+  Specific indirect
+
+    Y3
+    SY
+    R1                 0.456      0.191      2.390      0.017
+
+    Y3
+    SY
+    SM
+    R1                 0.314      0.153      2.049      0.040
+
+
+Effects from R2 to Y3
+
+  Total                0.116      0.130      0.892      0.372
+  Total indirect       0.116      0.130      0.892      0.372
+
+  Specific indirect
+
+    Y3
+    SY
+    R2                 0.152      0.127      1.190      0.234
+
+    Y3
+    SY
+    SM
+    R2                -0.035      0.043     -0.828      0.407
+
+
+Effects from R3 to Y3
+
+  Total                0.707      0.132      5.345      0.000
+  Total indirect       0.707      0.132      5.345      0.000
+
+  Specific indirect
+
+    Y3
+    SY
+    R3                 0.355      0.212      1.672      0.095
+
+    Y3
+    SY
+    SM
+    R3                 0.352      0.176      2.007      0.045
+
+
+
+CONFIDENCE INTERVALS OF MODEL RESULTS
+
+                  Lower .5%  Lower 2.5%    Lower 5%    Estimate    Upper 5%  Upper 2.5%   Upper .5%
+
+ IM       BY
+    M0               1.000       1.000       1.000       1.000       1.000       1.000       1.000
+    M1               1.000       1.000       1.000       1.000       1.000       1.000       1.000
+    M2               1.000       1.000       1.000       1.000       1.000       1.000       1.000
+    M3               1.000       1.000       1.000       1.000       1.000       1.000       1.000
+
+ SM       BY
+    M1               1.000       1.000       1.000       1.000       1.000       1.000       1.000
+    M2               1.414       1.414       1.414       1.414       1.414       1.414       1.414
+    M3               1.038       1.074       1.089       1.205       1.314       1.330       1.371
+
+ IY       BY
+    Y0               1.000       1.000       1.000       1.000       1.000       1.000       1.000
+    Y1               1.000       1.000       1.000       1.000       1.000       1.000       1.000
+    Y2               1.000       1.000       1.000       1.000       1.000       1.000       1.000
+    Y3               1.000       1.000       1.000       1.000       1.000       1.000       1.000
+
+ SY       BY
+    Y1               1.000       1.000       1.000       1.000       1.000       1.000       1.000
+    Y2               1.414       1.414       1.414       1.414       1.414       1.414       1.414
+    Y3               1.240       1.274       1.290       1.387       1.518       1.557       1.602
+
+ SY       ON
+    SM              -1.204      -0.737      -0.620      -0.362      -0.195      -0.171      -0.128
+
+ SM       ON
+    R1              -0.810      -0.763      -0.743      -0.625      -0.516      -0.499      -0.441
+    R2              -0.114      -0.071      -0.048       0.070       0.184       0.212       0.252
+    R3              -0.900      -0.841      -0.821      -0.701      -0.585      -0.567      -0.536
+
+ SY       ON
+    R1              -0.237       0.051       0.108       0.329       0.498       0.529       0.584
+    R2              -0.121      -0.072      -0.035       0.109       0.265       0.285       0.345
+    R3              -0.410      -0.056       0.008       0.256       0.435       0.474       0.558
+
+ IM       WITH
+    SM              -0.278      -0.246      -0.227      -0.114       0.009       0.032       0.073
+    SY              -0.156      -0.140      -0.131      -0.080      -0.021      -0.004       0.060
+    IY              -0.048      -0.022      -0.008       0.063       0.130       0.141       0.172
+
+ IY       WITH
+    SY              -0.476      -0.428      -0.400      -0.233      -0.086      -0.056      -0.001
+    SM              -0.120      -0.092      -0.082      -0.030       0.023       0.030       0.050
+
+ M0       WITH
+    Y0              -0.099      -0.092      -0.088      -0.069      -0.048      -0.045      -0.038
+
+ M1       WITH
+    Y1              -0.099      -0.092      -0.088      -0.069      -0.048      -0.045      -0.038
+
+ M2       WITH
+    Y2              -0.099      -0.092      -0.088      -0.069      -0.048      -0.045      -0.038
+
+ M3       WITH
+    Y3              -0.099      -0.092      -0.088      -0.069      -0.048      -0.045      -0.038
+
+ Intercepts
+    Y0              -0.155      -0.127      -0.111      -0.040       0.032       0.042       0.070
+    Y1               0.023       0.075       0.105       0.231       0.355       0.383       0.413
+    Y2               0.012       0.079       0.106       0.278       0.435       0.472       0.514
+    Y3               0.211       0.271       0.311       0.491       0.657       0.692       0.741
+    M0              -0.093      -0.070      -0.058       0.007       0.074       0.088       0.112
+    M1              -0.373      -0.326      -0.311      -0.210      -0.109      -0.091      -0.059
+    M2              -0.460      -0.429      -0.409      -0.285      -0.158      -0.136      -0.092
+    M3              -0.583      -0.535      -0.517      -0.399      -0.278      -0.247      -0.212
+
+ Variances
+    IM               0.482       0.534       0.557       0.724       0.884       0.907       0.976
+    IY               0.752       0.836       0.885       1.084       1.292       1.337       1.406
+
+ Residual Variances
+    Y0              -0.251      -0.175      -0.144       0.033       0.217       0.248       0.326
+    Y1               0.412       0.430       0.444       0.505       0.566       0.578       0.600
+    Y2               0.215       0.237       0.253       0.317       0.380       0.394       0.417
+    Y3               0.498       0.547       0.562       0.647       0.726       0.738       0.781
+    M0               0.080       0.133       0.153       0.300       0.447       0.481       0.550
+    M1               0.346       0.359       0.371       0.421       0.468       0.479       0.503
+    M2               0.178       0.193       0.202       0.254       0.304       0.317       0.337
+    M3               0.296       0.318       0.325       0.379       0.426       0.436       0.456
+    SM               0.089       0.128       0.150       0.254       0.342       0.355       0.386
+    SY               0.332       0.388       0.414       0.557       0.684       0.711       0.768
+
+New/Additional Parameters
+    R1I1             0.068       0.103       0.121       0.226       0.397       0.452       0.696
+    R1D1            -0.237       0.051       0.108       0.329       0.498       0.529       0.584
+    R11T             0.339       0.394       0.420       0.555       0.699       0.726       0.782
+    R1I2             0.096       0.145       0.170       0.320       0.561       0.640       0.984
+    R1D2            -0.336       0.072       0.152       0.465       0.704       0.749       0.827
+    R12T             0.479       0.557       0.594       0.785       0.989       1.026       1.106
+    R1I3             0.096       0.140       0.164       0.314       0.552       0.635       0.989
+    R1D3            -0.351       0.070       0.151       0.456       0.696       0.752       0.852
+    R13T             0.480       0.539       0.576       0.770       0.976       1.030       1.089
+    R2I1            -0.135      -0.095      -0.081      -0.025       0.017       0.025       0.044
+    R2D1            -0.121      -0.072      -0.035       0.109       0.265       0.285       0.345
+    R21T            -0.150      -0.099      -0.071       0.084       0.235       0.267       0.326
+    R2I2            -0.191      -0.134      -0.114      -0.036       0.023       0.036       0.062
+    R2D2            -0.171      -0.101      -0.049       0.155       0.375       0.403       0.488
+    R22T            -0.213      -0.140      -0.100       0.119       0.332       0.378       0.461
+    R2I3            -0.187      -0.131      -0.113      -0.035       0.023       0.037       0.061
+    R2D3            -0.170      -0.094      -0.049       0.152       0.377       0.413       0.485
+    R23T            -0.201      -0.134      -0.097       0.116       0.338       0.382       0.460
+    R3I1             0.087       0.116       0.134       0.254       0.451       0.505       0.848
+    R3D1            -0.410      -0.056       0.008       0.256       0.435       0.474       0.558
+    R31T             0.281       0.338       0.366       0.510       0.664       0.686       0.743
+    R3I2             0.123       0.164       0.190       0.359       0.638       0.714       1.200
+    R3D2            -0.580      -0.079       0.012       0.362       0.615       0.671       0.789
+    R32T             0.397       0.478       0.517       0.721       0.939       0.970       1.051
+    R3I3             0.122       0.158       0.186       0.352       0.627       0.731       1.184
+    R3D3            -0.546      -0.079       0.012       0.355       0.613       0.674       0.769
+    R33T             0.371       0.462       0.510       0.707       0.939       0.973       1.067
+
+
+CONFIDENCE INTERVALS OF TOTAL, TOTAL INDIRECT, SPECIFIC INDIRECT, AND DIRECT EFFECTS
+
+
+                  Lower .5%  Lower 2.5%    Lower 5%    Estimate    Upper 5%  Upper 2.5%   Upper .5%
+
+Effects from R1 to Y1
+
+  Total              0.339       0.394       0.420       0.555       0.699       0.726       0.782
+  Total indirect     0.339       0.394       0.420       0.555       0.699       0.726       0.782
+
+  Specific indirect
+
+    Y1
+    SY
+    R1              -0.237       0.051       0.108       0.329       0.498       0.529       0.584
+
+    Y1
+    SY
+    SM
+    R1               0.068       0.103       0.121       0.226       0.397       0.452       0.696
+
+
+Effects from R2 to Y1
+
+  Total             -0.150      -0.099      -0.071       0.084       0.235       0.267       0.326
+  Total indirect    -0.150      -0.099      -0.071       0.084       0.235       0.267       0.326
+
+  Specific indirect
+
+    Y1
+    SY
+    R2              -0.121      -0.072      -0.035       0.109       0.265       0.285       0.345
+
+    Y1
+    SY
+    SM
+    R2              -0.135      -0.095      -0.081      -0.025       0.017       0.025       0.044
+
+
+Effects from R3 to Y1
+
+  Total              0.281       0.338       0.366       0.510       0.664       0.686       0.743
+  Total indirect     0.281       0.338       0.366       0.510       0.664       0.686       0.743
+
+  Specific indirect
+
+    Y1
+    SY
+    R3              -0.410      -0.056       0.008       0.256       0.435       0.474       0.558
+
+    Y1
+    SY
+    SM
+    R3               0.087       0.116       0.134       0.254       0.451       0.505       0.848
+
+
+Effects from R1 to Y2
+
+  Total              0.479       0.557       0.594       0.785       0.989       1.026       1.106
+  Total indirect     0.479       0.557       0.594       0.785       0.989       1.026       1.106
+
+  Specific indirect
+
+    Y2
+    SY
+    R1              -0.336       0.072       0.152       0.465       0.704       0.749       0.827
+
+    Y2
+    SY
+    SM
+    R1               0.096       0.145       0.170       0.320       0.561       0.640       0.984
+
+
+Effects from R2 to Y2
+
+  Total             -0.213      -0.140      -0.100       0.119       0.332       0.378       0.461
+  Total indirect    -0.213      -0.140      -0.100       0.119       0.332       0.378       0.461
+
+  Specific indirect
+
+    Y2
+    SY
+    R2              -0.171      -0.101      -0.049       0.155       0.375       0.403       0.488
+
+    Y2
+    SY
+    SM
+    R2              -0.191      -0.134      -0.114      -0.036       0.023       0.036       0.062
+
+
+Effects from R3 to Y2
+
+  Total              0.397       0.478       0.517       0.721       0.939       0.970       1.051
+  Total indirect     0.397       0.478       0.517       0.721       0.939       0.970       1.051
+
+  Specific indirect
+
+    Y2
+    SY
+    R3              -0.580      -0.079       0.012       0.362       0.615       0.671       0.789
+
+    Y2
+    SY
+    SM
+    R3               0.123       0.164       0.190       0.359       0.638       0.714       1.200
+
+
+Effects from R1 to Y3
+
+  Total              0.480       0.539       0.576       0.770       0.976       1.030       1.089
+  Total indirect     0.480       0.539       0.576       0.770       0.976       1.030       1.089
+
+  Specific indirect
+
+    Y3
+    SY
+    R1              -0.351       0.070       0.151       0.456       0.696       0.752       0.852
+
+    Y3
+    SY
+    SM
+    R1               0.096       0.140       0.164       0.314       0.552       0.635       0.989
+
+
+Effects from R2 to Y3
+
+  Total             -0.201      -0.134      -0.097       0.116       0.338       0.382       0.460
+  Total indirect    -0.201      -0.134      -0.097       0.116       0.338       0.382       0.460
+
+  Specific indirect
+
+    Y3
+    SY
+    R2              -0.170      -0.094      -0.049       0.152       0.377       0.413       0.485
+
+    Y3
+    SY
+    SM
+    R2              -0.187      -0.131      -0.113      -0.035       0.023       0.037       0.061
+
+
+Effects from R3 to Y3
+
+  Total              0.371       0.462       0.510       0.707       0.939       0.973       1.067
+  Total indirect     0.371       0.462       0.510       0.707       0.939       0.973       1.067
+
+  Specific indirect
+
+    Y3
+    SY
+    R3              -0.546      -0.079       0.012       0.355       0.613       0.674       0.769
+
+    Y3
+    SY
+    SM
+    R3               0.122       0.158       0.186       0.352       0.627       0.731       1.184
+
+
+
+DIAGRAM INFORMATION
+
+  Use View Diagram under the Diagram menu in the Mplus Editor to view the diagram.
+  If running Mplus from the Mplus Diagrammer, the diagram opens automatically.
+
+  Diagram output
+    u:\_ phd stuff\thesis papers\papers\three types of sem\second revision if there is one\mplus dat
+
+     Beginning Time:  21:31:30
+        Ending Time:  21:31:37
+       Elapsed Time:  00:00:07
+
+
+
+MUTHEN & MUTHEN
+3463 Stoner Ave.
+Los Angeles, CA  90066
+
+Tel: (310) 391-9971
+Fax: (310) 391-8971
+Web: www.StatModel.com
+Support: Support@StatModel.com
+
+Copyright (c) 1998-2014 Muthen & Muthen
